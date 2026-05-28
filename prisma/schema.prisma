@@ -1,6 +1,7 @@
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 generator client {
@@ -12,8 +13,12 @@ model User {
   name         String
   email        String        @unique
   password     String
+  phone        String?
   skills       String[]      // Store list of skills
+  resumeHeadline String?     @map("resume_headline")
+  location     String?
   applications Application[]
+  careerScores CareerScore[]
 
   createdAt    DateTime      @default(now()) @map("created_at")
   updatedAt    DateTime      @updatedAt @map("updated_at")
@@ -23,7 +28,10 @@ model User {
 
 model Recruiter {
   id          String   @id @default(uuid())
+  name        String?
   companyName String   @map("company_name")
+  company     String?
+  designation String?
   email       String   @unique
   password    String
   jobs        Job[]
@@ -37,7 +45,10 @@ model Recruiter {
 model Job {
   id             String        @id @default(uuid())
   title          String
+  company        String?
   description    String
+  location       String?
+  salary         Int?          // Stored in INR, e.g. 800000 for 8 LPA
   requiredSkills String[]      @map("required_skills")
   recruiterId    String        @map("recruiter_id")
   recruiter      Recruiter     @relation(fields: [recruiterId], references: [id], onDelete: Cascade)
@@ -55,10 +66,38 @@ model Application {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   jobId     String   @map("job_id")
   job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  status    String   @default("PENDING") // PENDING, ACCEPTED, REJECTED
+  status    String   @default("applied") // applied, reviewed, rejected, hired
+  appliedAt DateTime @default(now()) @map("applied_at")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("applications")
+}
+
+model CareerScore {
+  id              String   @id @default(uuid())
+  userId          String   @map("user_id")
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  aimlFit         Float    @default(0) @map("aiml_fit")
+  backendFit      Float    @default(0) @map("backend_fit")
+  analystFit      Float    @default(0) @map("analyst_fit")
+  fullstackFit    Float    @default(0) @map("fullstack_fit")
+  dataAnalystFit  Float    @default(0) @map("data_analyst_fit")
+  calculatedAt    DateTime @default(now()) @map("calculated_at")
+
+  @@index([userId])
+  @@map("career_scores")
+}
+
+model SkillWeight {
+  id                   String @id @default(uuid())
+  skillName            String @unique @map("skill_name")
+  aimlWeight           Float  @default(0) @map("aiml_weight")
+  backendWeight        Float  @default(0) @map("backend_weight")
+  analystWeight        Float  @default(0) @map("analyst_weight")
+  fullstackWeight      Float  @default(0) @map("fullstack_weight")
+  dataAnalystWeight    Float  @default(0) @map("data_analyst_weight")
+
+  @@map("skill_weights")
 }
