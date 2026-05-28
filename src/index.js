@@ -5,6 +5,7 @@ import authRoutes from './routes/authRoutes.js';
 import jobRoutes from './routes/jobRoutes.js';
 import scoreRoutes from './routes/scoreRoutes.js';
 import atsRoutes from './routes/atsRoutes.js';
+import intelligenceRoutes from './routes/intelligenceRoutes.js';
 
 dotenv.config();
 
@@ -31,6 +32,7 @@ app.use('/auth', authRoutes);
 app.use('/', jobRoutes);   // Mounts /jobs and /apply
 app.use('/', scoreRoutes); // Mounts /career-score
 app.use('/', atsRoutes);   // Mounts /ats-score
+app.use('/', intelligenceRoutes); // Mounts /career-dna, /ats-score (GET), /recommendations, /analytics
 
 // 404 handler for unmatched routes
 app.use((req, res, next) => {
@@ -40,7 +42,7 @@ app.use((req, res, next) => {
 // Global error handler middleware
 app.use((err, req, res, next) => {
   console.error('Unhandled Server Error:', err);
-  
+
   // Handle Express body-parser JSON parsing errors
   if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
     return res.status(400).json({ error: 'Malformed JSON payload.' });
